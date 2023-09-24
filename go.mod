@@ -1,4 +1,4 @@
-module github.com/imdevinc/go-pd3
+module github.com/ImDevinC/go-pd3
 
 go 1.19
 

@@ -12,7 +12,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/imdevinc/go-pd3/models"
+	"github.com/ImDevinC/go-pd3/models"
 	_ "github.com/joho/godotenv/autoload"
 )
 
