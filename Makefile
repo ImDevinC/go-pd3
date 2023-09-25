@@ -13,7 +13,7 @@ build-windows-x64:
 release: build-linux-x64 build-osx-x64
 	tar czvf out/pd3-challenges-${RELEASE_VERSION}-linux-x64.tar.gz --directory out/linux-x64/ pd3-challenges
 	tar czvf out/pd3-challenges-${RELEASE_VERSION}-osx-x64.tar.gz --directory out/osx-x64/ pd3-challenges
-	zip out/pd3-challenges-${RELEASE_VERSION}-windows-x64.tar.gz --directory out/windows-x64/ pd3-challenges
+	zip out/pd3-challenges-${RELEASE_VERSION}-windows-x64.zip --directory out/windows-x64/ pd3-challenges
 
 clean:
 	rm -rf out/
