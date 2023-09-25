@@ -1,8 +1,15 @@
-# pd3
-This is a POC of how to call the challenges API in Payday 3. You will need to inspect your game traffic to get the bearer token, which is outside the scope of this project.
+# pd3-challenges
+This is a POC application that allows easy filtering of Payday 3 challenges.
 
-Once you have the token, you can either set an environment variable named `NEBULA_BEARER_TOKEN` or use the `-token` flag when calling `go run main.go`
+By default, the application uses the baseline challenges with no tracking. This allows you to easily view and filter all challenges.
 
-The results are printed to the screen, or you can use the `-outputFile` flag to save the results to a file in JSON format.
+If you setup an environment variable named `NEBULA_BEARER_TOKEN`, you can press `r` in the app to load your user data from Payday 3 servers.
+Note that getting this token is currently outside the scope of this repository.
 
-This project is very much a POC and has no real-world applications at this time.
+You can also create a file named `.env` in the same folder as this application and put `NEBULA_BEARER_TOKEN=<TOKEN>` inside of it.
+
+### Keys
+- `c` will toggle completed challenges (only available if user data is loaded)
+- `l` will toggle locked challenges (only available if user data is loaded)
+- `/` allows you to filter based on string values
+- `r` will refresh your user data, assuming you have provided a `NEBULA_BEARER_TOKEN`
