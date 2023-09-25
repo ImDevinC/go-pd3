@@ -1,0 +1,57 @@
+name: Build releases
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Set release
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Prepare GO
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.19"
+      - name: Release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ env.RELEASE_VERSION }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload linux 64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/pd3-challenges-${{ env.RELEASE_VERSION }}-linux-x64.tar.gz
+          asset_name: pd3-challenges-${{ env.RELEASE_VERSION }}-linux-x64.tar.gz
+          asset_content_type: application/gzip
+      - name: Upload osx x64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/pd3-challenges-${{ env.RELEASE_VERSION }}-osx-x64.tar.gz
+          asset_name: pd3-challenges-${{ env.RELEASE_VERSION }}-osx-x64.tar.gz
+          asset_content_type: application/gzip
+      - name: Upload windows x64 artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/pd3-challenges-${{ env.RELEASE_VERSION }}-windows-x64.zip
+          asset_name: pd3-challenges-${{ env.RELEASE_VERSION }}-windows-x64.zip
+          asset_content_type: application/zip
