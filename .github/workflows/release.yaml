@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "1.19"
+      - name: Make
+        run: make release
       - name: Release
         uses: actions/create-release@v1
         id: create_release
