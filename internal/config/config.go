@@ -1,7 +1,9 @@
 package config
 
 import (
+	"embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"sort"
@@ -13,13 +15,16 @@ import (
 var configDir = path.Join(xdg.DataHome, "pd3-challenges")
 var challengesFile = "challenges.json"
 
-func LoadSaved() ([]models.PD3DataResponse, error) {
+func LoadSaved(defaultFile embed.FS) ([]models.PD3DataResponse, error) {
 	challenges, err := loadExisting(path.Join(configDir, challengesFile))
 	if err != nil {
-		challenges, err = loadExisting("default.json")
-	}
-	if err != nil {
-		return challenges, err
+		tmp, err := defaultFile.ReadFile("default.json")
+		if err != nil {
+			return challenges, fmt.Errorf("failed to read input files. %w", err)
+		}
+		if err := json.Unmarshal(tmp, &challenges); err != nil {
+			return challenges, fmt.Errorf("failed to unmarshal JSON. %w", err)
+		}
 	}
 	sort.Slice(challenges, func(i, j int) bool {
 		return challenges[i].Challenge.Name < challenges[j].Challenge.Name

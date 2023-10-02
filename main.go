@@ -13,7 +13,7 @@ import (
 var defaultChallenges embed.FS
 
 func main() {
-	challenges, err := config.LoadSaved()
+	challenges, err := config.LoadSaved(defaultChallenges)
 	if err != nil {
 		panic(err)
 	}
