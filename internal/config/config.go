@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"sort"
 
 	"github.com/ImDevinC/go-pd3/internal/models"
 	"github.com/adrg/xdg"
@@ -20,6 +21,9 @@ func LoadSaved() ([]models.PD3DataResponse, error) {
 	if err != nil {
 		return challenges, err
 	}
+	sort.Slice(challenges, func(i, j int) bool {
+		return challenges[i].Challenge.Name < challenges[j].Challenge.Name
+	})
 	return challenges, nil
 }
 

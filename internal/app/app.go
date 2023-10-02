@@ -93,12 +93,22 @@ func (a *App) populateTable() {
 	for _, item := range a.Challenges {
 		cellTextColor := tcell.ColorWhite
 		status := ""
-		if item.Status == "COMPLETED" {
+		isAchievement := false
+		for _, t := range item.Challenge.Tags {
+			if strings.ToLower(t) == "achievement" {
+				isAchievement = true
+				continue
+			}
+		}
+		if isAchievement {
+			continue
+		}
+		if strings.ToLower(item.Status) == "completed" {
 			if a.hideCompleted {
 				continue
 			}
 			cellTextColor = tcell.ColorGreen
-		} else if item.Status == "INIT" {
+		} else if strings.ToLower(item.Status) == "init" {
 			if a.hideLocked {
 				continue
 			}
