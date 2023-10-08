@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 
 	"github.com/ImDevinC/go-pd3/internal/models"
 )
@@ -89,5 +90,9 @@ func (c *Client) GetChallenges() ([]models.PD3DataResponse, error) {
 		}
 		nextUrl = c.baseUrl + pd3Response.Paging.Next
 	}
+
+	sort.Slice(challenges, func(i, j int) bool {
+		return challenges[i].Challenge.Name < challenges[j].Challenge.Name
+	})
 	return challenges, nil
 }
