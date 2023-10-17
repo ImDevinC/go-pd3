@@ -1,7 +1,6 @@
 package app
 
 import (
-	"os"
 	"strings"
 
 	"github.com/ImDevinC/go-pd3/internal/config"
@@ -19,9 +18,12 @@ type App struct {
 	tui           tui
 	filter        string
 	Challenges    []models.PD3DataResponse
+	username      string
+	password      string
 }
 
 type tui struct {
+	login  *tview.InputField
 	filter *tview.InputField
 	grid   *tview.Grid
 	table  *tview.Table
@@ -39,11 +41,35 @@ func (a *App) Run() error {
 	a.tui.title = newPrimitive("PD3 Challenges")
 	a.tui.filter = tview.NewInputField().SetLabel("Filter: ").SetFieldWidth(0).SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter || key == tcell.KeyEscape {
-			a.refreshGrid(false)
+			a.refreshGrid(false, false)
 		}
 	}).SetChangedFunc(func(text string) {
 		a.filter = strings.ToLower(text)
 		a.populateTable()
+	})
+	a.tui.login = tview.NewInputField().SetLabel("Username: ").SetFieldWidth(0).SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter {
+			if a.tui.login.GetLabel() == "Username: " {
+				a.username = a.tui.login.GetText()
+				a.tui.login.SetLabel("Password: ").SetText("").SetMaskCharacter('*')
+			} else {
+				a.password = a.tui.login.GetText()
+				a.refreshGrid(false, false)
+				a.tui.login.SetLabel("Username: ").SetText("").SetMaskCharacter(0)
+				a.populateFooter("Retrieving challenges...")
+				err := a.login()
+				if err != nil {
+					a.populateFooter(err.Error())
+				} else {
+					a.populateFooter("Challenges updated")
+				}
+			}
+			return
+		}
+		if key == tcell.KeyEscape {
+			a.refreshGrid(false, false)
+		}
+
 	})
 	a.tui.footer = tview.NewFlex()
 	a.populateFooter("")
@@ -51,8 +77,7 @@ func (a *App) Run() error {
 	a.populateTable()
 	a.tui.grid = tview.NewGrid()
 	a.app = tview.NewApplication().SetRoot(a.tui.grid, true).SetFocus(a.tui.grid)
-	a.refreshGrid(false)
-	// a.refreshData()
+	a.refreshGrid(false, false)
 	return a.app.Run()
 }
 
@@ -72,9 +97,10 @@ func (a *App) buildTable() {
 			a.hideCompleted = !a.hideCompleted
 			a.populateTable()
 		case '/':
-			a.refreshGrid(true)
+			a.refreshGrid(true, false)
 		case 'r':
-			a.refreshData()
+			// a.refreshData()
+			a.refreshGrid(false, true)
 		case 'l':
 			a.hideLocked = !a.hideLocked
 			a.populateTable()
@@ -128,9 +154,9 @@ func (a *App) populateTable() {
 	}
 }
 
-func (a *App) refreshGrid(showFilter bool) {
+func (a *App) refreshGrid(showFilter bool, showLogin bool) {
 	rows := []int{1, 0, 1}
-	if showFilter {
+	if showFilter || showLogin {
 		rows = []int{1, 1, 0, 1}
 	}
 
@@ -145,6 +171,12 @@ func (a *App) refreshGrid(showFilter bool) {
 			AddItem(a.tui.table, 2, 0, 1, 3, 0, 0, false).
 			AddItem(a.tui.footer, 3, 0, 1, 3, 0, 0, false)
 		a.app.SetFocus(a.tui.filter)
+	} else if showLogin {
+		a.tui.grid.
+			AddItem(a.tui.login, 1, 0, 1, 3, 0, 0, true).
+			AddItem(a.tui.table, 2, 0, 1, 3, 0, 0, false).
+			AddItem(a.tui.footer, 3, 0, 1, 3, 0, 0, false)
+		a.app.SetFocus(a.tui.login)
 	} else {
 		a.tui.grid.
 			AddItem(a.tui.table, 1, 0, 1, 3, 0, 0, true).
@@ -165,17 +197,21 @@ func (a *App) populateFooter(errorMessage string) {
 	}
 }
 
-func (a *App) refreshData() {
-	client := pd3.New(pd3.WithToken(os.Getenv("NEBULA_BEARER_TOKEN")))
+func (a *App) login() error {
+	client := pd3.New()
+	err := client.Login(a.username, a.password)
+	if err != nil {
+		return err
+	}
 	challenges, err := client.GetChallenges()
 	if err != nil {
-		a.populateFooter(err.Error())
-		return
+		return err
 	}
 	a.Challenges = challenges
 	a.populateTable()
 	err = config.SaveChallenges(challenges)
 	if err != nil {
-		a.populateFooter(err.Error())
+		return err
 	}
+	return nil
 }

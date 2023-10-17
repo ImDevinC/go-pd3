@@ -2,6 +2,10 @@ package models
 
 import "time"
 
+type PD3AuthResponse struct {
+	AccessToken string `json:"access_token"`
+}
+
 type PD3Response struct {
 	Data   []PD3DataResponse `json:"data"`
 	Paging PD3PagingResponse `json:"paging"`

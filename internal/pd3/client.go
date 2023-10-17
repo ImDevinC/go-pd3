@@ -8,12 +8,16 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 
 	"github.com/ImDevinC/go-pd3/internal/models"
 )
 
 const nebulaBaseUrl string = "https://nebula.starbreeze.com"
 const challengesEndpoint string = "/challenge/v1/public/namespaces/pd3/users/me/records"
+const authEndpoint string = "/iam/v3/oauth/token"
+const defaultClientId string = "d682bcf949cb4744b3cd4295bbdd9fef"
+const defaultAuthToken string = "MGIzYmZkZjVhMjVmNDUyZmJkMzNhMzYxMzNhMmRlYWI6"
 
 type Client struct {
 	httpClient *http.Client
@@ -50,6 +54,43 @@ func WithBaseUrl(baseUrl string) PD3Option {
 	return func(c *Client) {
 		c.baseUrl = baseUrl
 	}
+}
+
+func (c *Client) Login(username string, password string) error {
+	params := url.Values{}
+	params.Add("grant_type", "password")
+	params.Add("client_id", defaultClientId)
+	params.Add("extend_exp", "true")
+	params.Add("username", username)
+	params.Add("password", password)
+	reqUrl, err := url.Parse(c.baseUrl + authEndpoint)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodPost, reqUrl.String(), strings.NewReader(params.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", fmt.Sprintf("Basic %s", defaultAuthToken))
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return errors.New(res.Status)
+	}
+	payload, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	token := models.PD3AuthResponse{}
+	err = json.Unmarshal(payload, &token)
+	if err != nil {
+		return err
+	}
+	c.token = token.AccessToken
+	return nil
 }
 
 func (c *Client) GetChallenges() ([]models.PD3DataResponse, error) {
